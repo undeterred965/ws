@@ -35,7 +35,11 @@ lastNum = newList[287].split(']')[0]
 del newList[287]
 del newList[0]
 newList.append(lastNum)
-newList.append(str('{:04.1f}'.format(temperature)))
+if ((temperature >= 10.0) | (temperature < 0.0)):
+	newList.append(str('{:04.1f}'.format(temperature)))
+else:
+	newList.append(str('{:03.1f}'.format(temperature)))
+
 newTempStr = "[" + ','.join(newList) + "]"
 
 with open("/var/www/html/pressure.json","r") as file:
