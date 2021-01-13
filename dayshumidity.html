@@ -23,11 +23,75 @@
 </div>
 </body>
 <script>
-var timeSet = [];
-var absHumiditySet = [];
-var relHumiditySet = [];
-var ctx = document.getElementById("myChart").getContext('2d');
-var myChart = new Chart(ctx, {
+
+function convertJsonTimeArray(myJson) {
+  var dataArray = Array.from(myJson);
+  for (i in dataArray) {
+    year = parseInt(dataArray[i].y);
+    month = parseInt(dataArray[i].mnth);
+    day = parseInt(dataArray[i].d);
+    hour = parseInt(dataArray[i].h);
+    minute = parseInt(dataArray[i].mnte);
+    timeSet.push(new Date(year,month-1,day,hour,minute));
+  }
+  return 'Time array done';
+}
+
+function convertJsonAbsHumArray(myJson) {
+  var dataArray = Array.from(myJson);
+  for (i in dataArray) {
+    humidity = dataArray[i];
+    absHumiditySet.push(humidity);
+  }
+  return 'AbsHumidity array done';
+}
+
+function convertJsonRelHumArray(myJson) {
+  var dataArray = Array.from(myJson);
+  for (i in dataArray) {
+    humidity = dataArray[i];
+    relHumiditySet.push(humidity);
+  }
+  return 'RelHumidity array done';
+}
+
+function getData() {
+  var p1 = fetch('time.json')
+  .then((response) => {
+    if (!response.ok) {
+      return Promise.reject(new Error(response.statusText));
+    }
+    return Promise.resolve(response);
+  })
+  .then((response) => response.json())
+  .then((myJson) => convertJsonTimeArray(myJson))
+  .catch((error) => console.log('Request failed: ',error));
+  var p2 = fetch('absHumidity.json')
+  .then(function(response) {
+    if(!response.ok) {
+      return Promise.reject(new Error(response.statusText));
+    }
+    return Promise.resolve(response);
+  })
+  .then((response) => response.json())
+  .then((myJson) => convertJsonAbsHumArray(myJson))
+  .catch((error) => console.log('Request failed: ',error));
+  var p3 = fetch('relHumidity.json')
+  .then((response) => {
+    if (!response.ok) {
+      return Promise.reject(new Error(response.statusText));
+    }
+    return Promise.resolve(response);
+  })
+  .then((response) => response.json())
+  .then((myJson) => convertJsonRelHumArray(myJson))
+  .catch((error) => console.log('Request failed: ',error));
+  return Promise.all([p1,p2,p3]);
+}
+
+function drawGraph() {
+  var ctx = document.getElementById("myChart").getContext('2d');
+  var myChart = new Chart(ctx, {
     type: 'line',
     data: {
         labels: timeSet,
@@ -70,75 +134,18 @@ var myChart = new Chart(ctx, {
 		],
         }
     }
-});
-
-fetch('time.json')
-  .then(function(response) {
-    if (response.status>=200 && response.status<300) {
-      return Promise.resolve(response);
-    } else {
-      return Promise.reject(new Error(response.statusText));
-  }})
-  .then(function(response) {
-    return response.json();
-  })
-  .then(function(myJson) {
-    var dataArray = Array.from(myJson);
-    for (i in dataArray) {
-      year = parseInt(dataArray[i].y);
-      month = parseInt(dataArray[i].mnth);
-      day = parseInt(dataArray[i].d);
-      hour = parseInt(dataArray[i].h);
-      minute = parseInt(dataArray[i].mnte);
-      timeSet.push(new Date(year,month-1,day,hour,minute));
-    }
-    myChart.update();
-  }).catch(function(error) {
-    console.log('Request failed',error);
   });
+}
 
+async function doWork() {
+  await getData();
+  drawGraph();
+}
 
-fetch('absHumidity.json')
-  .then(function(response) {
-    if (response.status>=200 && response.status<300) {
-      return Promise.resolve(response);
-    } else {
-      return Promise.reject(new Error(response.statusText));
-  }})
-  .then(function(response) {
-    return response.json();
-  })
-  .then(function(myJson) {
-    var dataArray = Array.from(myJson);
-    for (i in dataArray) {
-        humidity = dataArray[i];
-        absHumiditySet.push(humidity);
-    }
-    myChart.update();
-  }).catch(function(error) {
-    console.log('Request failed',error);
-  });
-
-fetch('relHumidity.json')
-  .then(function(response) {
-    if (response.status>=200 && response.status<300) {
-      return Promise.resolve(response);
-    } else {
-      return Promise.reject(new Error(response.statusText));
-  }})
-  .then(function(response) {
-    return response.json();
-  })
-  .then(function(myJson) {
-    var dataArray = Array.from(myJson);
-    for (i in dataArray) {
-      humidity = dataArray[i];
-      relHumiditySet.push(humidity);
-    }
-    myChart.update();
-  }).catch(function(error) {
-    console.log('Request failed',error);
-  });
+var timeSet = [];
+var absHumiditySet = [];
+var relHumiditySet = [];
+doWork();
 
 </script>
 </html>
