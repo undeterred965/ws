@@ -1,4 +1,4 @@
-# Indoors Weather Station (ws)
+# Indoor Weather Station (ws)
 ### Monitors temperature, pressure, humidity
 Weather Station webpages served by a Pi. Sensor is a BME680 by Pimoroni
 
