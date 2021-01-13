@@ -23,10 +23,56 @@
 </div>
 </body>
 <script>
-var timeSet = [];
-var tempSet = [];
-var ctx = document.getElementById("myChart").getContext('2d');
-var myChart = new Chart(ctx, {
+
+function convertJsonTimeArray(myJson) {
+  var dataArray = Array.from(myJson);
+  for (i in dataArray) {
+    year = parseInt(dataArray[i].y);
+    month = parseInt(dataArray[i].mnth);
+    day = parseInt(dataArray[i].d);
+    hour = parseInt(dataArray[i].h);
+    minute = parseInt(dataArray[i].mnte);
+    timeSet.push(new Date(year,month-1,day,hour,minute));
+  }
+  return 'Time array done';
+}
+
+function convertJsonTempArray(myJson) {
+  var dataArray = Array.from(myJson);
+  for (i in dataArray) {
+    temp = dataArray[i];
+    tempSet.push(temp);
+  }
+  return 'Temp array done';
+}
+
+function getData() {
+  var p1 = fetch('time.json')
+  .then((response) => {
+    if (!response.ok) {
+      return Promise.reject(new Error(response.statusText));
+    }
+    return Promise.resolve(response);
+  })
+  .then((response) => response.json())
+  .then((myJson) => convertJsonTimeArray(myJson))
+  .catch((error) => console.log('Request failed: ',error));
+  var p2 = fetch('temp.json')
+  .then(function(response) {
+    if(!response.ok) {
+      return Promise.reject(new Error(response.statusText));
+    }
+    return Promise.resolve(response);
+  })
+  .then((response) => response.json())
+  .then((myJson) => convertJsonTempArray(myJson))
+  .catch((error) => console.log('Request failed: ',error));
+  return Promise.all([p1,p2]);
+}
+
+function drawGraph() {
+  var ctx = document.getElementById("myChart").getContext('2d');
+  var myChart = new Chart(ctx, {
     type: 'line',
     data: {
         labels: timeSet,
@@ -45,54 +91,18 @@ var myChart = new Chart(ctx, {
            }]
         }
     }
-});
-
-fetch('time.json')
-  .then(function(response) {
-    if (response.status>=200 && response.status<300) {
-      return Promise.resolve(response);
-    } else {
-      return Promise.reject(new Error(response.statusText));
-  }})
-  .then(function(response) {
-    return response.json();
-  })
-  .then(function(myJson) {
-    var dataArray = Array.from(myJson);
-    for (i in dataArray) {
-      year = parseInt(dataArray[i].y);
-      month = parseInt(dataArray[i].mnth);
-      day = parseInt(dataArray[i].d);
-      hour = parseInt(dataArray[i].h);
-      minute = parseInt(dataArray[i].mnte);
-      timeSet.push(new Date(year,month-1,day,hour,minute));
-    }
-    myChart.update();
-  }).catch(function(error) {
-    console.log('Request failed',error);
   });
+}
 
+async function doWork() {
+  await getData();
+  drawGraph();
+}
 
-fetch('temp.json')
-  .then(function(response) {
-    if (response.status>=200 && response.status<300) {
-      return Promise.resolve(response);
-    } else {
-      return Promise.reject(new Error(response.statusText));
-  }})
-  .then(function(response) {
-    return response.json();
-  })
-  .then(function(myJson) {
-    var dataArray = Array.from(myJson);
-    for (i in dataArray) {
-        temp = dataArray[i];
-        tempSet.push(temp);
-    }
-    myChart.update();
-  }).catch(function(error) {
-    console.log('Request failed',error);
-  });
+var timeSet = [];
+var tempSet = [];
+doWork();
+
 
 </script>
 </html>
